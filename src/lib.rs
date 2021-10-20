@@ -33,9 +33,8 @@ pub mod configuration {
 
     use diesel::backend::{Backend, RawValue};
     use diesel::deserialize::{self, FromSql};
-    use diesel::serialize::{self, Output};
+    use diesel::serialize::{self, Output, ToSql};
     use diesel::sql_types::Integer;
-    use diesel::serialize::ToSql;
 
     #[derive(Debug, PartialEq, AsExpression)]
     #[sql_type = "Regconfig"]
