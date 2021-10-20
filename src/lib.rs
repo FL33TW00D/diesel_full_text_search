@@ -16,7 +16,7 @@ mod types {
     pub struct TsVector;
     pub type Tsvector = TsVector;
 
-    pub trait TextOrNullableText {}
+    pub trait TextOrNullableText: SingleValue {}
 
     impl TextOrNullableText for Text {}
     impl TextOrNullableText for Nullable<Text> {}
@@ -31,11 +31,11 @@ pub mod configuration {
 
     use std::io::Write;
 
-    use diesel::backend::Backend;
+    use diesel::backend::{Backend, RawValue};
     use diesel::deserialize::{self, FromSql};
     use diesel::serialize::{self, Output};
     use diesel::sql_types::Integer;
-    use diesel::types::ToSql;
+    use diesel::serialize::ToSql;
 
     #[derive(Debug, PartialEq, AsExpression)]
     #[sql_type = "Regconfig"]
@@ -65,7 +65,7 @@ pub mod configuration {
         DB: Backend,
         i32: FromSql<Integer, DB>,
     {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
+        fn from_sql(bytes: RawValue<DB>) -> deserialize::Result<Self> {
             <i32 as FromSql<Integer, DB>>::from_sql(bytes).map(|oid| TsConfiguration(oid as u32))
         }
     }
@@ -121,12 +121,12 @@ mod dsl {
         use diesel::pg::Pg;
         use types::*;
 
-        diesel_infix_operator!(Matches, " @@ ", backend: Pg);
-        diesel_infix_operator!(Concat, " || ", TsVector, backend: Pg);
-        diesel_infix_operator!(And, " && ", TsQuery, backend: Pg);
-        diesel_infix_operator!(Or, " || ", TsQuery, backend: Pg);
-        diesel_infix_operator!(Contains, " @> ", backend: Pg);
-        diesel_infix_operator!(ContainedBy, " <@ ", backend: Pg);
+        infix_operator!(Matches, " @@ ", backend: Pg);
+        infix_operator!(Concat, " || ", TsVector, backend: Pg);
+        infix_operator!(And, " && ", TsQuery, backend: Pg);
+        infix_operator!(Or, " || ", TsQuery, backend: Pg);
+        infix_operator!(Contains, " @> ", backend: Pg);
+        infix_operator!(ContainedBy, " <@ ", backend: Pg);
     }
 
     use self::predicates::*;
