@@ -8,11 +8,11 @@ mod types {
     use diesel::SqlType;
 
     #[derive(Clone, Copy, SqlType)]
-    #[postgres(oid = "3615", array_oid = "3645")]
+    #[diesel(postgres_type(oid = 3615, array_oid = 3645))]
     pub struct TsQuery;
 
     #[derive(Clone, Copy, SqlType)]
-    #[postgres(oid = "3614", array_oid = "3643")]
+    #[diesel(postgres_type(oid = 3614, array_oid = 3643))]
     pub struct TsVector;
     pub type Tsvector = TsVector;
 
@@ -22,26 +22,25 @@ mod types {
     impl TextOrNullableText for Nullable<Text> {}
 
     #[derive(SqlType)]
-    #[postgres(type_name = "regconfig")]
+    #[diesel(postgres_type(name = "regconfig"))]
     pub struct Regconfig;
 }
 
 pub mod configuration {
     use crate::Regconfig;
 
-    use std::io::Write;
-
-    use diesel::backend::{Backend, RawValue};
+    use diesel::backend::RawValue;
     use diesel::deserialize::{self, FromSql};
+    use diesel::pg::Pg;
     use diesel::serialize::{self, Output, ToSql};
     use diesel::sql_types::Integer;
 
     #[derive(Debug, PartialEq, AsExpression)]
-    #[sql_type = "Regconfig"]
+    #[diesel(sql_type = Regconfig)]
     pub struct TsConfiguration(pub u32);
 
     impl TsConfiguration {
-        pub const SIMPLE: Self = Self(3748);
+        pub const SIMPLE: Self = Self(37482);
         pub const DANISH: Self = Self(12824);
         pub const DUTCH: Self = Self(12826);
         pub const ENGLISH: Self = Self(12828);
@@ -59,23 +58,15 @@ pub mod configuration {
         pub const TURKISH: Self = Self(12852);
     }
 
-    impl<DB> FromSql<Regconfig, DB> for TsConfiguration
-    where
-        DB: Backend,
-        i32: FromSql<Integer, DB>,
-    {
-        fn from_sql(bytes: RawValue<DB>) -> deserialize::Result<Self> {
-            <i32 as FromSql<Integer, DB>>::from_sql(bytes).map(|oid| TsConfiguration(oid as u32))
+    impl FromSql<Regconfig, Pg> for TsConfiguration {
+        fn from_sql(bytes: RawValue<Pg>) -> deserialize::Result<Self> {
+            <i32 as FromSql<Integer, Pg>>::from_sql(bytes).map(|oid| TsConfiguration(oid as u32))
         }
     }
 
-    impl<DB> ToSql<Regconfig, DB> for TsConfiguration
-    where
-        DB: Backend,
-        i32: ToSql<Integer, DB>,
-    {
-        fn to_sql<W: Write>(&self, out: &mut Output<W, DB>) -> serialize::Result {
-            <i32 as ToSql<Integer, DB>>::to_sql(&(*&self.0 as i32), out)
+    impl ToSql<Regconfig, Pg> for TsConfiguration {
+        fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+            <i32 as ToSql<Integer, Pg>>::to_sql(&(self.0 as i32), &mut out.reborrow())
         }
     }
 }
