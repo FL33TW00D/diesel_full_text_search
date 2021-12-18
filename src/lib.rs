@@ -40,7 +40,7 @@ pub mod configuration {
     pub struct TsConfiguration(pub u32);
 
     impl TsConfiguration {
-        pub const SIMPLE: Self = Self(37482);
+        pub const SIMPLE: Self = Self(3748);
         pub const DANISH: Self = Self(12824);
         pub const DUTCH: Self = Self(12826);
         pub const ENGLISH: Self = Self(12828);
