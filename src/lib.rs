@@ -103,7 +103,6 @@ mod functions {
 }
 
 mod dsl {
-    use diesel::expression::grouped::Grouped;
     use diesel::expression::{AsExpression, Expression};
     use types::*;
 
@@ -121,15 +120,9 @@ mod dsl {
 
     use self::predicates::*;
 
-    pub type Concat<T, U> = Grouped<predicates::Concat<T, U>>;
-
     pub trait TsVectorExtensions: Expression<SqlType = TsVector> + Sized {
         fn matches<T: AsExpression<TsQuery>>(self, other: T) -> Matches<Self, T::Expression> {
             Matches::new(self, other.as_expression())
-        }
-
-        fn concat<T: AsExpression<TsVector>>(self, other: T) -> Concat<Self, T::Expression> {
-            Grouped(predicates::Concat::new(self, other.as_expression()))
         }
     }
 
